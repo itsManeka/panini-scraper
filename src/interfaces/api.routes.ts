@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import express from 'express';
 import { ApiController } from './api.controller';
 
 /**
@@ -28,7 +29,6 @@ export function createApiRoutes(apiController: ApiController): Router {
  * @returns Configured Express application
  */
 export function createApp(apiController: ApiController) {
-    const express = require('express');
     const app = express();
 
     // Middleware

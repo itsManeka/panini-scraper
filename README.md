@@ -325,7 +325,88 @@ npm test -- tests/integration
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+We welcome contributions! Please follow these guidelines to help us maintain a high-quality codebase.
+
+### 📋 How to Contribute
+
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
+3. **Make** your changes following our coding standards
+4. **Add** tests for your changes
+5. **Run** the test suite to ensure everything passes
+6. **Commit** your changes (`git commit -m 'Add some amazing feature'`)
+7. **Push** to the branch (`git push origin feature/amazing-feature`)
+8. **Open** a Pull Request
+
+### 🔍 Before Contributing
+
+- Check if an issue already exists for your feature/bug
+- Read through existing code to understand the architecture
+- Ensure your changes follow Clean Architecture principles
+- Make sure all tests pass and coverage remains above 80%
+
+### 📝 Contribution Guidelines
+
+#### Code Style
+- Follow TypeScript best practices
+- Use meaningful variable and function names
+- Add JSDoc comments for public methods
+- Keep functions small and focused (single responsibility)
+- Use consistent formatting (run `npm run lint:fix`)
+
+#### Testing
+- Write unit tests for new functionality
+- Add integration tests for complex features
+- Ensure edge cases are covered
+- Maintain or improve test coverage
+- Use descriptive test names that explain the scenario
+
+#### Documentation
+- Update README.md if adding new features
+- Add code comments for complex logic
+- Include usage examples for new APIs
+
+### 🐛 Reporting Bugs
+
+When reporting bugs, please include:
+
+- Clear description of the issue
+- Steps to reproduce
+- Expected behavior
+- Actual behavior
+- Environment details (Node.js version, OS, etc.)
+- Sample code or URL that demonstrates the issue
+
+### 💡 Suggesting Features
+
+For feature requests, please provide:
+
+- Clear description of the feature
+- Use case and motivation
+- Possible implementation approach
+- Examples of how it would be used
+
+### 🧪 Running Tests Locally
+
+```bash
+# Install dependencies
+npm install
+
+# Run all tests
+npm test
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run linting
+npm run lint
+
+# Fix linting issues
+npm run lint:fix
+```
 
 ### Development Setup
 
@@ -353,10 +434,6 @@ npm run build
 - **TypeScript**: Static type checking
 - **Jest**: Testing framework with coverage
 - **Clean Architecture**: Organized codebase structure
-
-## 📝 Changelog
-
-See [CHANGELOG.md](CHANGELOG.md) for a list of changes and updates.
 
 ## 🐛 Known Issues
 
