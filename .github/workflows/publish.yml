@@ -2,11 +2,9 @@ name: Build, Test & Publish
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
-  release:
-    types: [ created ]
 
 jobs:
   test:
@@ -82,7 +80,7 @@ jobs:
   publish:
     needs: [test, build]
     runs-on: ubuntu-latest
-    if: github.event_name == 'release' && github.event.action == 'created'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     
     steps:
     - name: Checkout repository
@@ -104,45 +102,65 @@ jobs:
     - name: Build for production
       run: npm run build
       
-    - name: Verify version matches tag
+    - name: Get package version
+      id: package_version
       run: |
-        # Extract version from git tag (remove 'v' prefix if present)
-        TAG_VERSION=${GITHUB_REF#refs/tags/}
-        TAG_VERSION=${TAG_VERSION#v}
-        PKG_VERSION=$(node -p "require('./package.json').version")
-        echo "Package version: $PKG_VERSION"
-        echo "Tag version: $TAG_VERSION"
+        VERSION=$(node -p "require('./package.json').version")
+        echo "version=v$VERSION" >> $GITHUB_OUTPUT
+        echo "version_number=$VERSION" >> $GITHUB_OUTPUT
+        echo "Package version: $VERSION"
         
-        if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
-          echo "⚠️  Warning: Package version ($PKG_VERSION) doesn't match tag ($TAG_VERSION)"
-          echo "Publishing with package.json version: $PKG_VERSION"
-        else
-          echo "✅ Version matches tag"
-        fi
+    - name: Create and push tag
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git tag ${{ steps.package_version.outputs.version }}
+        git push origin ${{ steps.package_version.outputs.version }}
         
     - name: Publish to npm
       run: npm publish
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         
+    - name: Create GitHub Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.package_version.outputs.version }}
+        release_name: Release ${{ steps.package_version.outputs.version }}
+        body: |
+          ## Changes
+          
+          This release includes the latest changes from the main branch.
+          
+          ## Package Information
+          - **Version**: ${{ steps.package_version.outputs.version_number }}
+          - **NPM Package**: Available at [npmjs.com](https://www.npmjs.com/package/panini-scraper)
+          
+          ## Installation
+          ```bash
+          npm install panini-scraper@${{ steps.package_version.outputs.version_number }}
+          ```
+        draft: false
+        prerelease: false
+        
     - name: Create GitHub Release Assets
       run: |
-        # Extract version from git tag (remove 'v' prefix if present)
-        VERSION=${GITHUB_REF#refs/tags/}
-        VERSION=${VERSION#v}
         # Create a tarball of the package
         npm pack
-        mv *.tgz panini-scraper-${VERSION}.tgz
-        echo "Created package: panini-scraper-${VERSION}.tgz"
+        mv *.tgz panini-scraper-${{ steps.package_version.outputs.version_number }}.tgz
+        echo "Created package: panini-scraper-${{ steps.package_version.outputs.version_number }}.tgz"
         
     - name: Upload Release Asset
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./panini-scraper-${{ github.ref_name }}.tgz
-        asset_name: panini-scraper-${{ github.ref_name }}.tgz
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./panini-scraper-${{ steps.package_version.outputs.version_number }}.tgz
+        asset_name: panini-scraper-${{ steps.package_version.outputs.version_number }}.tgz
         asset_content_type: application/gzip
 
   security-audit:
