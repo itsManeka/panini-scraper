@@ -6,6 +6,10 @@ import {
     ProductScrapingError
 } from '../../src/domain';
 
+// Get package version dynamically
+const packageJson = require('../../package.json');
+const PACKAGE_VERSION = packageJson.version;
+
 // Mock use case
 const mockScrapeProductUseCase = {
     execute: jest.fn()
@@ -200,7 +204,7 @@ describe('ApiController', () => {
             expect(mockResponse.json).toHaveBeenCalledWith({
                 success: true,
                 message: 'Panini Scraper API is running',
-                version: '1.0.0',
+                version: PACKAGE_VERSION,
                 timestamp: expect.any(String)
             });
         });
@@ -214,7 +218,7 @@ describe('ApiController', () => {
             expect(mockResponse.json).toHaveBeenCalledWith({
                 name: 'Panini Scraper API',
                 description: 'API for scraping Panini Brasil product information',
-                version: '1.0.0',
+                version: PACKAGE_VERSION,
                 endpoints: {
                     'POST /api/scrape': 'Scrape product by URL in request body',
                     'GET /api/scrape': 'Scrape product by URL in query parameter',
