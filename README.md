@@ -2,6 +2,7 @@
 
 [![npm version](https://badge.fury.io/js/panini-scraper.svg)](https://badge.fury.io/js/panini-scraper)
 [![Build Status](https://github.com/itsManeka/panini-scraper/workflows/Build%2C%20Test%20%26%20Publish/badge.svg)](https://github.com/itsManeka/panini-scraper/actions)
+[![codecov](https://codecov.io/github/itsManeka/panini-scraper/graph/badge.svg?token=YRAC35KTCZ)](https://codecov.io/github/itsManeka/panini-scraper)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A powerful Node.js TypeScript library for scraping product information from [Panini Brasil](https://panini.com.br) website. Built with Clean Architecture principles, comprehensive testing, and full TypeScript support.
