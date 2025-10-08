@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: write
+  packages: write
+  actions: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -114,10 +119,30 @@ jobs:
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git tag ${{ steps.package_version.outputs.version }}
-        git push origin ${{ steps.package_version.outputs.version }}
+        
+        # Check if tag already exists
+        if git rev-parse "${{ steps.package_version.outputs.version }}" >/dev/null 2>&1; then
+          echo "Tag ${{ steps.package_version.outputs.version }} already exists, skipping tag creation"
+        else
+          echo "Creating tag ${{ steps.package_version.outputs.version }}"
+          git tag ${{ steps.package_version.outputs.version }}
+          git push origin ${{ steps.package_version.outputs.version }}
+        fi
+        
+    - name: Check if version already published
+      id: check_version
+      run: |
+        VERSION=${{ steps.package_version.outputs.version_number }}
+        if npm view panini-scraper@$VERSION version >/dev/null 2>&1; then
+          echo "Version $VERSION already exists on NPM"
+          echo "should_publish=false" >> $GITHUB_OUTPUT
+        else
+          echo "Version $VERSION not found on NPM, proceeding with publish"
+          echo "should_publish=true" >> $GITHUB_OUTPUT
+        fi
         
     - name: Publish to npm
+      if: steps.check_version.outputs.should_publish == 'true'
       run: npm publish
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
