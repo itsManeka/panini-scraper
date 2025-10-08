@@ -175,8 +175,10 @@ jobs:
       run: |
         # Create a tarball of the package
         npm pack
-        mv *.tgz panini-scraper-${{ steps.package_version.outputs.version_number }}.tgz
-        echo "Created package: panini-scraper-${{ steps.package_version.outputs.version_number }}.tgz"
+        # The file is already named correctly: panini-scraper-VERSION.tgz
+        TARBALL=$(ls panini-scraper-*.tgz)
+        echo "Created package: $TARBALL"
+        echo "tarball_name=$TARBALL" >> $GITHUB_ENV
         
     - name: Upload Release Asset
       uses: actions/upload-release-asset@v1
@@ -184,8 +186,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./panini-scraper-${{ steps.package_version.outputs.version_number }}.tgz
-        asset_name: panini-scraper-${{ steps.package_version.outputs.version_number }}.tgz
+        asset_path: ./${{ env.tarball_name }}
+        asset_name: ${{ env.tarball_name }}
         asset_content_type: application/gzip
 
   security-audit:
