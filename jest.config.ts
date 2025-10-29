@@ -14,10 +14,7 @@ const config: Config = {
     // Coverage configuration
     collectCoverageFrom: [
         'src/**/*.ts',
-        '!src/index.ts',
-        '!src/server.ts',
-        '!src/**/index.ts',
-        '!src/interfaces/api.routes.ts'
+        '!src/**/index.ts'
     ],
 
     coverageReporters: [

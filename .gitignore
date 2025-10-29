@@ -117,3 +117,12 @@ Thumbs.db
 test-results/
 *.spec.js
 *.test.js
+
+# Example output files
+examples/output/
+examples/*.json
+examples/html/
+
+# Documentation drafts
+SUMMARY.md
+NOTES.md

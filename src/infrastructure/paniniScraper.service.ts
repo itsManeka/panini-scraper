@@ -39,6 +39,8 @@ export class PaniniScraperService implements ProductRepository {
 			const isPreOrder = this.extractPreOrderStatus($);
 			const inStock = this.extractStockStatus($);
 			const imageUrl = this.extractImageUrl($);
+			const format = this.extractFormat($);
+			const contributors = this.extractContributors($);
 			const id = this.extractProductId($, url);
 
 			const product = new ProductEntity(
@@ -49,6 +51,8 @@ export class PaniniScraperService implements ProductRepository {
 				inStock,
 				imageUrl,
 				url,
+				format,
+				contributors,
 				id
 			);
 
@@ -251,6 +255,100 @@ export class PaniniScraperService implements ProductRepository {
 		const isOutOfStock = outOfStockIndicators.some(indicator => pageText.includes(indicator));
 
 		return !isOutOfStock;
+	}
+
+	/**
+	 * Extracts the product format (e.g., "Capa dura", "Brochura", "Digital")
+	 * Looks for the "Encadernação" field in the product details table
+	 */
+	private extractFormat($: cheerio.CheerioAPI): string {
+		// Try to find format in the product details table using data-th attribute
+		const formatCell = $('td[data-th="Encadernação"]');
+		if (formatCell.length > 0) {
+			const format = formatCell.text().trim();
+			if (format && format.length > 0) {
+				return format;
+			}
+		}
+
+		// Fallback: Try to find in table rows by label
+		const detailsTable = $('table.additional-attributes, #product-attribute-specs-table');
+		if (detailsTable.length > 0) {
+			const rows = detailsTable.find('tr');
+			for (let i = 0; i < rows.length; i++) {
+				const row = rows.eq(i);
+				const cell = row.find('td[data-th]');
+				const dataThValue = cell.attr('data-th');
+
+				if (dataThValue &&
+					(dataThValue.toLowerCase().includes('encadernação') ||
+						dataThValue.toLowerCase().includes('formato'))) {
+					const value = cell.text().trim();
+					if (value && value.length > 0) {
+						return value;
+					}
+				}
+			}
+		}
+
+		// Default format if not found
+		return 'Formato não especificado';
+	}
+
+	/**
+	 * Extracts the list of contributors (authors, artists, translators, etc.)
+	 * Looks for the "Autores" field in the product details table
+	 */
+	private extractContributors($: cheerio.CheerioAPI): string[] {
+		const contributors: string[] = [];
+
+		// Try to find authors in the product details table using data-th attribute
+		const authorsCell = $('td[data-th="Autores"]');
+		if (authorsCell.length > 0) {
+			const authorsText = authorsCell.text().trim();
+			if (authorsText && authorsText.length > 0) {
+				// Split by comma and trim each name
+				const names = authorsText
+					.split(',')
+					.map(name => name.trim())
+					.filter(name => name.length > 0 && name.length < 100);
+
+				contributors.push(...names);
+			}
+		}
+
+		// Fallback: Try to find in table rows by label if primary method failed
+		if (contributors.length === 0) {
+			const detailsTable = $('table.additional-attributes, #product-attribute-specs-table');
+			if (detailsTable.length > 0) {
+				const rows = detailsTable.find('tr');
+				for (let i = 0; i < rows.length; i++) {
+					const row = rows.eq(i);
+					const cell = row.find('td[data-th]');
+					const dataThValue = cell.attr('data-th');
+
+					if (dataThValue &&
+						(dataThValue.toLowerCase().includes('autor') ||
+							dataThValue.toLowerCase().includes('roteiro') ||
+							dataThValue.toLowerCase().includes('arte'))) {
+						const value = cell.text().trim();
+						if (value && value.length > 0) {
+							// Split by comma and trim each name
+							const names = value
+								.split(',')
+								.map(name => name.trim())
+								.filter(name => name.length > 0 && name.length < 100);
+
+							contributors.push(...names);
+							break; // Found contributors, no need to continue
+						}
+					}
+				}
+			}
+		}
+
+		// Remove duplicates
+		return Array.from(new Set(contributors));
 	}
 
 	/**
@@ -496,39 +594,20 @@ export class PaniniScraperService implements ProductRepository {
 	}
 
 	/**
-	 * Extracts or generates a product ID
+	 * Extracts or generates a product ID (Reference/SKU)
+	 * Looks for the "Referência" field in the product details table
 	 */
 	private extractProductId($: cheerio.CheerioAPI, url: string): string {
-		// Try a broader search for reference information first
-		const allText = $('body').text();
-		const globalReferenceMatch = allText.match(/referência[:\s]*([A-Z0-9-_]+)/i);
-		if (globalReferenceMatch && globalReferenceMatch[1]) {
-			return globalReferenceMatch[1];
-		}
-
-		// Try to find product reference in "Detalhes do Produto" section
-		const detailsSection = $('.product-details, .product-info, .details-section');
-		if (detailsSection.length > 0) {
-			const referenceLabels = detailsSection.find('*').filter((_, el) => {
-				const text = $(el).text().toLowerCase();
-				return text.includes('referência') || text.includes('reference') || text.includes('código');
-			});
-
-			for (let i = 0; i < referenceLabels.length; i++) {
-				const el = referenceLabels.eq(i);
-				const parent = el.parent();
-				const sibling = el.next();
-				const text = parent.text() || sibling.text() || '';
-
-				// Look for a pattern like "Referência: XXXXX"
-				const referenceMatch = text.match(/(?:referência|reference|código)[:\s]*([A-Z0-9-_]+)/i);
-				if (referenceMatch && referenceMatch[1]) {
-					return referenceMatch[1];
-				}
+		// Primary method: Try to find reference in the product details table using data-th attribute
+		const referenceCell = $('td[data-th="Referência"]');
+		if (referenceCell.length > 0) {
+			const reference = referenceCell.text().trim();
+			if (reference && reference.length > 0) {
+				return reference;
 			}
 		}
 
-		// Try to find product ID in various places
+		// Fallback 1: Try to find product ID in various places
 		const idSelectors = [
 			'[data-product-id]',
 			'[data-sku]',
@@ -550,23 +629,35 @@ export class PaniniScraperService implements ProductRepository {
 			}
 		}
 
-		// Try to find in product details table
-		const detailsTable = $('.product-details table, .details-table, .product-info table');
+		// Fallback 2: Try to find in product details table by label
+		const detailsTable = $('table.additional-attributes, #product-attribute-specs-table');
 		if (detailsTable.length > 0) {
 			const rows = detailsTable.find('tr');
 			for (let i = 0; i < rows.length; i++) {
 				const row = rows.eq(i);
-				const label = row.find('td:first-child, th:first-child').text().toLowerCase();
-				if (label.includes('referência') || label.includes('código') || label.includes('sku')) {
-					const value = row.find('td:last-child, th:last-child').text().trim();
-					if (value && value !== label) {
+				const cell = row.find('td[data-th]');
+				const dataThValue = cell.attr('data-th');
+
+				if (dataThValue &&
+					(dataThValue.toLowerCase().includes('referência') ||
+						dataThValue.toLowerCase().includes('código') ||
+						dataThValue.toLowerCase().includes('sku'))) {
+					const value = cell.text().trim();
+					if (value && value.length > 0) {
 						return value;
 					}
 				}
 			}
 		}
 
-		// If no ID found, extract from URL
+		// Fallback 3: Try a broader search for reference in page text
+		const allText = $('body').text();
+		const globalReferenceMatch = allText.match(/referência[:\s]*([A-Z0-9-_]+)/i);
+		if (globalReferenceMatch && globalReferenceMatch[1]) {
+			return globalReferenceMatch[1];
+		}
+
+		// Fallback 4: Extract from URL
 		const urlParts = url.split('/');
 		const lastPart = urlParts[urlParts.length - 1];
 

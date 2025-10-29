@@ -189,15 +189,11 @@ describe('PaniniScraperService Advanced Edge Cases', () => {
                     <body>
                         <h1>Table ID Test</h1>
                         <div class="price">R$ 25,00</div>
-                        <table class="product-details">
-                            <tr>
-                                <td>Código:</td>
-                                <td>PROD123ABC</td>
-                            </tr>
-                            <tr>
-                                <td>Categoria:</td>
-                                <td>Comics</td>
-                            </tr>
+                        <table class="additional-attributes" id="product-attribute-specs-table">
+                            <tbody>
+                                <tr><td class="col data" data-th="Referência">PROD123ABC</td></tr>
+                                <tr><td class="col data" data-th="Categoria">Comics</td></tr>
+                            </tbody>
                         </table>
                         <img src="/test.jpg" />
                     </body>

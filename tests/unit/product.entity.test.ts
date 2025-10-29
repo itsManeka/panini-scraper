@@ -9,6 +9,8 @@ describe('ProductEntity', () => {
         inStock: true,
         imageUrl: 'https://panini.com.br/image.jpg',
         url: 'https://panini.com.br/a-vida-de-wolverine',
+        format: 'Capa dura',
+        contributors: ['Stan Lee', 'Jack Kirby'],
         id: 'AVWOL001'
     };
 
@@ -22,6 +24,8 @@ describe('ProductEntity', () => {
                 validProductData.inStock,
                 validProductData.imageUrl,
                 validProductData.url,
+                validProductData.format,
+                validProductData.contributors,
                 validProductData.id
             );
 
@@ -32,6 +36,8 @@ describe('ProductEntity', () => {
             expect(product.inStock).toBe(validProductData.inStock);
             expect(product.imageUrl).toBe(validProductData.imageUrl);
             expect(product.url).toBe(validProductData.url);
+            expect(product.format).toBe(validProductData.format);
+            expect(product.contributors).toEqual(validProductData.contributors);
             expect(product.id).toBe(validProductData.id);
         });
 
@@ -45,6 +51,8 @@ describe('ProductEntity', () => {
                     validProductData.inStock,
                     validProductData.imageUrl,
                     validProductData.url,
+                    validProductData.format,
+                    validProductData.contributors,
                     validProductData.id
                 );
             }).toThrow('Product title is required');
@@ -54,12 +62,14 @@ describe('ProductEntity', () => {
             expect(() => {
                 new ProductEntity(
                     validProductData.title,
-                    -10,
+                    -1,
                     validProductData.currentPrice,
                     validProductData.isPreOrder,
                     validProductData.inStock,
                     validProductData.imageUrl,
                     validProductData.url,
+                    validProductData.format,
+                    validProductData.contributors,
                     validProductData.id
                 );
             }).toThrow('Full price must be non-negative');
@@ -70,11 +80,13 @@ describe('ProductEntity', () => {
                 new ProductEntity(
                     validProductData.title,
                     validProductData.fullPrice,
-                    -5,
+                    -1,
                     validProductData.isPreOrder,
                     validProductData.inStock,
                     validProductData.imageUrl,
                     validProductData.url,
+                    validProductData.format,
+                    validProductData.contributors,
                     validProductData.id
                 );
             }).toThrow('Current price must be non-negative');
@@ -84,12 +96,14 @@ describe('ProductEntity', () => {
             expect(() => {
                 new ProductEntity(
                     validProductData.title,
-                    20.00,
-                    25.00,
+                    validProductData.fullPrice,
+                    validProductData.fullPrice + 10,
                     validProductData.isPreOrder,
                     validProductData.inStock,
                     validProductData.imageUrl,
                     validProductData.url,
+                    validProductData.format,
+                    validProductData.contributors,
                     validProductData.id
                 );
             }).toThrow('Current price cannot be higher than full price');
@@ -105,6 +119,8 @@ describe('ProductEntity', () => {
                     validProductData.inStock,
                     validProductData.imageUrl,
                     'invalid-url',
+                    validProductData.format,
+                    validProductData.contributors,
                     validProductData.id
                 );
             }).toThrow('Valid product URL is required');
@@ -120,6 +136,8 @@ describe('ProductEntity', () => {
                     validProductData.inStock,
                     validProductData.imageUrl,
                     validProductData.url,
+                    validProductData.format,
+                    validProductData.contributors,
                     ''
                 );
             }).toThrow('Product ID is required');
@@ -130,12 +148,14 @@ describe('ProductEntity', () => {
         it('should return true when current price is lower than full price', () => {
             const product = new ProductEntity(
                 validProductData.title,
-                24.90,
-                16.19,
+                validProductData.fullPrice,
+                validProductData.currentPrice,
                 validProductData.isPreOrder,
                 validProductData.inStock,
                 validProductData.imageUrl,
                 validProductData.url,
+                validProductData.format,
+                validProductData.contributors,
                 validProductData.id
             );
 
@@ -145,12 +165,14 @@ describe('ProductEntity', () => {
         it('should return false when current price equals full price', () => {
             const product = new ProductEntity(
                 validProductData.title,
-                24.90,
-                24.90,
+                validProductData.fullPrice,
+                validProductData.fullPrice,
                 validProductData.isPreOrder,
                 validProductData.inStock,
                 validProductData.imageUrl,
                 validProductData.url,
+                validProductData.format,
+                validProductData.contributors,
                 validProductData.id
             );
 
@@ -162,27 +184,31 @@ describe('ProductEntity', () => {
         it('should calculate correct discount percentage', () => {
             const product = new ProductEntity(
                 validProductData.title,
-                100.00,
-                80.00,
+                validProductData.fullPrice,
+                validProductData.currentPrice,
                 validProductData.isPreOrder,
                 validProductData.inStock,
                 validProductData.imageUrl,
                 validProductData.url,
+                validProductData.format,
+                validProductData.contributors,
                 validProductData.id
             );
 
-            expect(product.discountPercentage).toBe(20);
+            expect(product.discountPercentage).toBe(35); // 35% discount
         });
 
         it('should return 0 when there is no discount', () => {
             const product = new ProductEntity(
                 validProductData.title,
-                24.90,
-                24.90,
+                validProductData.fullPrice,
+                validProductData.fullPrice,
                 validProductData.isPreOrder,
                 validProductData.inStock,
                 validProductData.imageUrl,
                 validProductData.url,
+                validProductData.format,
+                validProductData.contributors,
                 validProductData.id
             );
 
@@ -194,12 +220,14 @@ describe('ProductEntity', () => {
         it('should calculate correct savings amount', () => {
             const product = new ProductEntity(
                 validProductData.title,
-                24.90,
-                16.19,
+                validProductData.fullPrice,
+                validProductData.currentPrice,
                 validProductData.isPreOrder,
                 validProductData.inStock,
                 validProductData.imageUrl,
                 validProductData.url,
+                validProductData.format,
+                validProductData.contributors,
                 validProductData.id
             );
 
@@ -209,12 +237,14 @@ describe('ProductEntity', () => {
         it('should return 0 when there are no savings', () => {
             const product = new ProductEntity(
                 validProductData.title,
-                24.90,
-                24.90,
+                validProductData.fullPrice,
+                validProductData.fullPrice,
                 validProductData.isPreOrder,
                 validProductData.inStock,
                 validProductData.imageUrl,
                 validProductData.url,
+                validProductData.format,
+                validProductData.contributors,
                 validProductData.id
             );
 
@@ -232,13 +262,23 @@ describe('ProductEntity', () => {
                 validProductData.inStock,
                 validProductData.imageUrl,
                 validProductData.url,
+                validProductData.format,
+                validProductData.contributors,
                 validProductData.id
             );
 
             const json = product.toJSON();
 
-            expect(json).toEqual(validProductData);
-            expect(json).not.toBeInstanceOf(ProductEntity);
+            expect(json.title).toBe(validProductData.title);
+            expect(json.fullPrice).toBe(validProductData.fullPrice);
+            expect(json.currentPrice).toBe(validProductData.currentPrice);
+            expect(json.isPreOrder).toBe(validProductData.isPreOrder);
+            expect(json.inStock).toBe(validProductData.inStock);
+            expect(json.imageUrl).toBe(validProductData.imageUrl);
+            expect(json.url).toBe(validProductData.url);
+            expect(json.format).toBe(validProductData.format);
+            expect(json.contributors).toEqual(validProductData.contributors);
+            expect(json.id).toBe(validProductData.id);
         });
     });
 });

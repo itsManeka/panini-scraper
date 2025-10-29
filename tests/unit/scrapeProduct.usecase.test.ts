@@ -13,6 +13,8 @@ class MockProductRepository implements ProductRepository {
                 inStock: true,
                 imageUrl: 'https://panini.com.br/image.jpg',
                 url: url,
+                format: 'Capa dura',
+                contributors: ['Test Author', 'Test Artist'],
                 id: 'TEST001'
             };
         }
@@ -42,6 +44,8 @@ describe('ScrapeProductUseCase', () => {
                 inStock: true,
                 imageUrl: 'https://panini.com.br/image.jpg',
                 url: url,
+                format: 'Capa dura',
+                contributors: ['Test Author', 'Test Artist'],
                 id: 'TEST001'
             });
         });

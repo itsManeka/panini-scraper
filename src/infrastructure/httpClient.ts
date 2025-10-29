@@ -2,11 +2,45 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { HttpConfig } from '../domain/product.repository';
 
 /**
- * HTTP client wrapper that handles requests with configurable options
+ * HTTP client wrapper that provides a configurable interface for making HTTP requests.
+ * 
+ * This class encapsulates Axios functionality, providing a clean interface for HTTP operations
+ * with support for custom headers, timeouts, and proxy configuration. It follows the
+ * Infrastructure layer pattern in Clean Architecture, isolating external HTTP concerns.
+ * 
+ * @example
+ * Basic usage:
+ * ```typescript
+ * const client = new HttpClient({ timeout: 5000 });
+ * const response = await client.get('https://example.com');
+ * ```
+ * 
+ * @example
+ * With proxy configuration:
+ * ```typescript
+ * const client = new HttpClient({
+ *   timeout: 10000,
+ *   proxy: {
+ *     host: 'proxy.example.com',
+ *     port: 8080,
+ *     auth: { username: 'user', password: 'pass' }
+ *   }
+ * });
+ * ```
  */
 export class HttpClient {
+    /** Internal Axios instance used for making HTTP requests */
     private readonly client: AxiosInstance;
 
+    /**
+     * Creates a new HttpClient instance with the specified configuration.
+     * 
+     * Initializes an Axios instance with browser-like headers to avoid detection
+     * as a bot. The default timeout is 15 seconds, and the User-Agent mimics
+     * a modern Chrome browser.
+     * 
+     * @param config - Optional HTTP configuration options
+     */
     constructor(config?: HttpConfig) {
         const axiosConfig: AxiosRequestConfig = {
             timeout: config?.timeout || 15000,
@@ -39,9 +73,21 @@ export class HttpClient {
     }
 
     /**
-     * Performs a GET request to the specified URL
-     * @param url - The URL to fetch
-     * @returns Promise that resolves to the response
+     * Performs an HTTP GET request to the specified URL.
+     * 
+     * This method wraps Axios's GET functionality, providing consistent error handling
+     * by transforming Axios-specific errors into standard Error objects with descriptive messages.
+     * 
+     * @param url - The full URL to fetch
+     * @returns A promise that resolves to the Axios response containing the HTML string
+     * @throws {Error} When the HTTP request fails, with details about the failure reason and status code
+     * 
+     * @example
+     * ```typescript
+     * const client = new HttpClient();
+     * const response = await client.get('https://panini.com.br/product');
+     * console.log(response.data); // HTML content
+     * ```
      */
     async get(url: string): Promise<AxiosResponse<string>> {
         try {
@@ -58,8 +104,27 @@ export class HttpClient {
     }
 
     /**
-     * Updates the HTTP configuration
-     * @param config - New configuration options
+     * Updates the HTTP client configuration dynamically.
+     * 
+     * This method allows modifying the client's configuration after instantiation,
+     * which is useful for changing settings like timeout or headers without creating
+     * a new client instance. Only the provided configuration options are updated;
+     * existing settings remain unchanged.
+     * 
+     * @param config - Configuration options to update (only provided options are changed)
+     * 
+     * @example
+     * ```typescript
+     * const client = new HttpClient({ timeout: 5000 });
+     * 
+     * // Later, increase timeout without recreating the client
+     * client.updateConfig({ timeout: 10000 });
+     * 
+     * // Add custom headers
+     * client.updateConfig({ 
+     *   headers: { 'X-Custom-Header': 'value' } 
+     * });
+     * ```
      */
     updateConfig(config: HttpConfig): void {
         if (config.timeout) {

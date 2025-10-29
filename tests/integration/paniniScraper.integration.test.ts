@@ -60,6 +60,8 @@ describe('PaniniScraperService Integration', () => {
                 inStock: true,
                 imageUrl: 'https://panini.com.br/images/wolverine.jpg',
                 url: url,
+                format: 'Formato não especificado',
+                contributors: [],
                 id: 'a-vida-de-wolverine'
             });
 
@@ -303,10 +305,11 @@ describe('PaniniScraperService Integration', () => {
           <body>
             <h1>Produto com ID nos Detalhes</h1>
             <div class="price">R$ 29,90</div>
-            <div class="product-details">
-              <h3>Detalhes do Produto</h3>
-              <p>Código: DET123456</p>
-            </div>
+            <table class="additional-attributes">
+              <tbody>
+                <tr><td class="col data" data-th="Referência">DET123456</td></tr>
+              </tbody>
+            </table>
           </body>
         </html>
       `;
