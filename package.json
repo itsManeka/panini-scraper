@@ -1,6 +1,6 @@
 {
     "name": "panini-scraper",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "description": "A TypeScript library for scraping Panini Brasil product information",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
@@ -24,11 +24,13 @@
         "prepare": "npm run build",
         "example:basic": "ts-node examples/basic-usage.ts",
         "example:advanced": "ts-node examples/advanced-usage.ts",
+        "example:batch": "ts-node examples/batch-usage.ts",
         "example:html": "ts-node examples/test-with-real-html.ts"
     },
     "keywords": [
         "panini",
         "scraper",
+        "batch-scraping",
         "library",
         "typescript",
         "clean-architecture",

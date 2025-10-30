@@ -1,6 +1,45 @@
 import { Product } from './product.entity';
 
 /**
+ * Represents a successfully scraped product with its URL.
+ */
+export interface ScrapedProduct {
+    /** The URL that was scraped */
+    url: string;
+    /** The scraped product data */
+    product: Product;
+}
+
+/**
+ * Represents a failed scraping attempt with error details.
+ */
+export interface FailedProduct {
+    /** The URL that failed to scrape */
+    url: string;
+    /** The error that occurred */
+    error: ProductScrapingError;
+    /** The error message */
+    message: string;
+}
+
+/**
+ * Result of batch scraping multiple product URLs.
+ * Contains both successful and failed scraping attempts.
+ */
+export interface BatchScrapeResult {
+    /** Successfully scraped products */
+    successes: ScrapedProduct[];
+    /** Failed scraping attempts with error details */
+    failures: FailedProduct[];
+    /** Total number of URLs processed */
+    totalProcessed: number;
+    /** Number of successful scrapes */
+    successCount: number;
+    /** Number of failed scrapes */
+    failureCount: number;
+}
+
+/**
  * Repository interface for scraping product data.
  * 
  * This interface defines the contract for data access in the domain layer,

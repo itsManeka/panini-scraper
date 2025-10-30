@@ -20,7 +20,7 @@ export * from './infrastructure';
 // Convenience functions for direct usage
 import { ScrapeProductUseCase } from './usecases';
 import { PaniniScraperService } from './infrastructure';
-import { HttpConfig, Product } from './domain';
+import { HttpConfig, Product, BatchScrapeResult } from './domain';
 
 /**
  * Scrapes product information from a Panini Brasil product page.
@@ -78,6 +78,57 @@ export async function scrapePaniniProduct(url: string, config?: HttpConfig): Pro
     const useCase = new ScrapeProductUseCase(scraperService);
 
     return await useCase.execute(url);
+}
+
+/**
+ * Scrapes product information from multiple Panini Brasil product pages.
+ * 
+ * This function processes multiple URLs sequentially, returning both successful
+ * and failed results. Unlike the single URL version, this never throws errors
+ * for individual URL failures, instead returning them categorized in the result.
+ * 
+ * @param urls - Array of product page URLs to scrape
+ * @param config - Optional HTTP configuration for customizing request behavior
+ * @returns A promise that resolves to batch scraping results with successes and failures
+ * 
+ * @example
+ * Basic batch usage:
+ * ```typescript
+ * import { scrapePaniniProducts } from 'panini-scraper';
+ * 
+ * const result = await scrapePaniniProducts([
+ *   'https://panini.com.br/wolverine-05',
+ *   'https://panini.com.br/x-men-blue',
+ *   'https://panini.com.br/spider-man'
+ * ]);
+ * 
+ * console.log(`Successfully scraped: ${result.successCount}/${result.totalProcessed}`);
+ * 
+ * result.successes.forEach(({ url, product }) => {
+ *   console.log(`${product.title}: R$ ${product.currentPrice}`);
+ * });
+ * 
+ * result.failures.forEach(({ url, message }) => {
+ *   console.error(`Failed to scrape ${url}: ${message}`);
+ * });
+ * ```
+ * 
+ * @example
+ * With configuration:
+ * ```typescript
+ * import { scrapePaniniProducts } from 'panini-scraper';
+ * 
+ * const result = await scrapePaniniProducts(
+ *   ['https://panini.com.br/wolverine-05', 'https://panini.com.br/x-men-blue'],
+ *   { timeout: 15000 }
+ * );
+ * ```
+ */
+export async function scrapePaniniProducts(urls: string[], config?: HttpConfig): Promise<BatchScrapeResult> {
+    const scraperService = new PaniniScraperService(config);
+    const useCase = new ScrapeProductUseCase(scraperService);
+
+    return await useCase.executeMany(urls);
 }
 
 /**

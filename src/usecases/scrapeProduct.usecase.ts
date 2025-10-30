@@ -1,4 +1,4 @@
-import { Product, ProductRepository, InvalidUrlError } from '../domain';
+import { Product, ProductRepository, InvalidUrlError, BatchScrapeResult, ScrapedProduct, FailedProduct, ProductScrapingError } from '../domain';
 
 /**
  * Use case for scraping product information from Panini Brasil.
@@ -68,6 +68,71 @@ export class ScrapeProductUseCase {
 
         // Delegate to repository for actual scraping
         return await this.productRepository.scrapeProduct(normalizedUrl);
+    }
+
+    /**
+     * Executes batch product scraping for multiple URLs.
+     * 
+     * This method processes multiple URLs sequentially, collecting both successful
+     * and failed results. It never throws errors for individual URL failures,
+     * instead categorizing them in the result object.
+     * 
+     * @param urls - Array of product page URLs to scrape
+     * @returns A promise that resolves to batch scraping results containing successes and failures
+     * 
+     * @example
+     * ```typescript
+     * const result = await useCase.executeMany([
+     *   'https://panini.com.br/wolverine-05',
+     *   'https://panini.com.br/x-men-blue',
+     *   'https://invalid-url'
+     * ]);
+     * 
+     * console.log(`Successful: ${result.successCount}`);
+     * console.log(`Failed: ${result.failureCount}`);
+     * 
+     * result.successes.forEach(({ url, product }) => {
+     *   console.log(`${url}: ${product.title}`);
+     * });
+     * 
+     * result.failures.forEach(({ url, message }) => {
+     *   console.error(`${url}: ${message}`);
+     * });
+     * ```
+     */
+    async executeMany(urls: string[]): Promise<BatchScrapeResult> {
+        const successes: ScrapedProduct[] = [];
+        const failures: FailedProduct[] = [];
+
+        // Process each URL sequentially
+        for (const url of urls) {
+            try {
+                const product = await this.execute(url);
+                successes.push({ url, product });
+            } catch (error) {
+                // Categorize the error and add to failures
+                const scrapingError = error instanceof ProductScrapingError
+                    ? error
+                    : new ProductScrapingError(
+                        error instanceof Error ? error.message : 'Unknown error',
+                        url
+                    );
+
+                failures.push({
+                    url,
+                    error: scrapingError,
+                    message: scrapingError.message
+                });
+            }
+        }
+
+        return {
+            successes,
+            failures,
+            totalProcessed: urls.length,
+            successCount: successes.length,
+            failureCount: failures.length
+        };
     }
 
     /**

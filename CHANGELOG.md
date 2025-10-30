@@ -5,6 +5,73 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-10-30
+
+### Added
+
+- **Batch Scraping Functionality**: New ability to scrape multiple products in a single call
+  - `scrapePaniniProducts(urls, config?)` - Main function for batch scraping
+  - `executeMany(urls)` method in `ScrapeProductUseCase` for batch processing
+  - Sequential processing of URLs to prevent overwhelming the server
+  - Partial results support with success/failure separation
+  - Never throws errors - all failures are captured and returned
+  
+- **New Domain Types** for batch operations:
+  - `BatchScrapeResult` - Contains successes, failures, and statistics
+  - `ScrapedProduct` - Represents successfully scraped product with URL
+  - `FailedProduct` - Represents failed scraping attempt with error details
+  
+- **Enhanced Error Handling**:
+  - Batch operations automatically categorize errors by type
+  - Detailed failure information including URL, error object, and message
+  - Success/failure statistics (totalProcessed, successCount, failureCount)
+
+### Improved
+
+- **Documentation**: Comprehensive updates to README.md covering batch scraping
+  - New batch scraping examples and use cases
+  - Detailed API reference for new functions
+  - Error handling examples for batch operations
+  - Performance tips for batch vs parallel scraping
+  
+- **Test Coverage**: Maintained at 95.67% with 133 tests passing
+  - 11 new unit tests for batch functionality
+  - 11 new integration tests for batch scraping
+  - All tests covering edge cases and error scenarios
+
+### Technical Details
+
+- **Clean Architecture**: New functionality follows existing architecture principles
+- **No Code Duplication**: Batch processing reuses single product scraping logic
+- **Type Safety**: Full TypeScript support for all new types and functions
+- **Sequential Processing**: URLs processed one by one to be respectful to the server
+
+### Examples
+
+**Basic Batch Scraping:**
+```typescript
+import { scrapePaniniProducts } from 'panini-scraper';
+
+const result = await scrapePaniniProducts([
+  'https://panini.com.br/wolverine',
+  'https://panini.com.br/x-men',
+  'https://panini.com.br/spider-man'
+]);
+
+console.log(`✅ Success: ${result.successCount}/${result.totalProcessed}`);
+```
+
+**With Error Handling:**
+```typescript
+result.successes.forEach(({ url, product }) => {
+  console.log(`${product.title}: R$ ${product.currentPrice}`);
+});
+
+result.failures.forEach(({ url, message }) => {
+  console.error(`Failed ${url}: ${message}`);
+});
+```
+
 ## [1.1.0] - 2024-10-24
 
 ### Changed - **Breaking Changes**

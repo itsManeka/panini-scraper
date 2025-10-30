@@ -5,5 +5,8 @@ export {
     HttpConfig,
     ProductScrapingError,
     ProductNotFoundError,
-    InvalidUrlError
+    InvalidUrlError,
+    ScrapedProduct,
+    FailedProduct,
+    BatchScrapeResult
 } from './product.repository';

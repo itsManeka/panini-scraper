@@ -67,6 +67,30 @@ const product = await scrapePaniniProduct(
 ### Batch Scraping
 
 ```typescript
+import { scrapePaniniProducts } from 'panini-scraper';
+
+const result = await scrapePaniniProducts([
+  'https://panini.com.br/product-1',
+  'https://panini.com.br/product-2',
+  'https://panini.com.br/product-3'
+]);
+
+console.log(`✅ Success: ${result.successCount}/${result.totalProcessed}`);
+
+// Process successful results
+result.successes.forEach(({ url, product }) => {
+  console.log(`${product.title}: R$ ${product.currentPrice}`);
+});
+
+// Handle failures
+result.failures.forEach(({ url, message }) => {
+  console.error(`Failed ${url}: ${message}`);
+});
+```
+
+### Multiple Products with Promise.all (Advanced)
+
+```typescript
 import { createPaniniScraper } from 'panini-scraper';
 
 const scraper = createPaniniScraper({ timeout: 10000 });

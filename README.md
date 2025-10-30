@@ -9,12 +9,13 @@ A powerful and elegant TypeScript library for scraping product information from 
 
 ## 🚀 Features
 
+- **Batch Scraping**: Scrape multiple products in a single call with automatic error handling
 - **Clean Architecture**: Organized codebase following SOLID principles and separation of concerns
 - **TypeScript First**: Full type safety with comprehensive TypeScript definitions
 - **Well Tested**: 95%+ test coverage with unit and integration tests
 - **High Performance**: Efficient HTML parsing with Cheerio and HTTP requests with Axios
 - **Flexible Configuration**: Configurable HTTP client with proxy support and custom headers
-- **Detailed Error Handling**: Specific error types for different failure scenarios
+- **Detailed Error Handling**: Specific error types for different failure scenarios with partial results support
 - **Production Ready**: Battle-tested with proper CI/CD pipeline
 - **Zero Dependencies on Runtime**: Only requires Axios and Cheerio
 
@@ -54,14 +55,40 @@ async function main() {
 main();
 ```
 
-### Scraping Multiple Products
+### Batch Scraping (Multiple Products)
+
+```typescript
+import { scrapePaniniProducts } from 'panini-scraper';
+
+// Scrape multiple products with automatic error handling
+const result = await scrapePaniniProducts([
+  'https://panini.com.br/wolverine-2025-05',
+  'https://panini.com.br/a-fabulosa-x-force',
+  'https://panini.com.br/batman-dark-knight'
+]);
+
+// Access results with success/failure separation
+console.log(`✅ Successfully scraped: ${result.successCount}/${result.totalProcessed}`);
+
+// Process successful results
+result.successes.forEach(({ url, product }) => {
+  console.log(`${product.title}: R$ ${product.currentPrice}`);
+});
+
+// Handle failures gracefully
+result.failures.forEach(({ url, message }) => {
+  console.error(`❌ Failed to scrape ${url}: ${message}`);
+});
+```
+
+### Scraping Multiple Products (Advanced)
 
 ```typescript
 import { createPaniniScraper } from 'panini-scraper';
 
 const scraper = createPaniniScraper({ timeout: 5000 });
 
-// Efficiently scrape multiple products with the same configuration
+// Efficiently scrape multiple products with the same configuration using Promise.all
 const products = await Promise.all([
   scraper('https://panini.com.br/wolverine-2025-05'),
   scraper('https://panini.com.br/a-fabulosa-x-force'),
@@ -99,7 +126,9 @@ const product = await scrapePaniniProduct(
 );
 ```
 
-## 📊 Response Format
+## 📊 Response Formats
+
+### Single Product Response
 
 The library returns a `Product` object with the following structure:
 
@@ -118,7 +147,7 @@ interface Product {
 }
 ```
 
-### Example Response
+#### Example Single Product Response
 
 ```json
 {
@@ -141,7 +170,106 @@ interface Product {
 }
 ```
 
+### Batch Scraping Response
+
+The `scrapePaniniProducts` function returns a `BatchScrapeResult` with the following structure:
+
+```typescript
+interface BatchScrapeResult {
+  successes: ScrapedProduct[];      // Successfully scraped products
+  failures: FailedProduct[];        // Failed scraping attempts
+  totalProcessed: number;           // Total URLs processed
+  successCount: number;             // Number of successes
+  failureCount: number;             // Number of failures
+}
+
+interface ScrapedProduct {
+  url: string;                      // The URL that was scraped
+  product: Product;                 // The scraped product data
+}
+
+interface FailedProduct {
+  url: string;                      // The URL that failed
+  error: ProductScrapingError;      // The error object
+  message: string;                  // Error message
+}
+```
+
+#### Example Batch Response
+
+```json
+{
+  "successes": [
+    {
+      "url": "https://panini.com.br/wolverine-2025-05",
+      "product": {
+        "title": "Wolverine #05",
+        "fullPrice": 8.90,
+        "currentPrice": 8.90,
+        "isPreOrder": false,
+        "inStock": true,
+        "imageUrl": "https://...",
+        "url": "https://panini.com.br/wolverine-2025-05",
+        "format": "Brochura",
+        "contributors": ["Benjamin Percy", "Adam Kubert"],
+        "id": "WOL05"
+      }
+    }
+  ],
+  "failures": [
+    {
+      "url": "https://panini.com.br/invalid-product",
+      "message": "Product not found or page structure has changed",
+      "error": { /* ProductNotFoundError object */ }
+    }
+  ],
+  "totalProcessed": 2,
+  "successCount": 1,
+  "failureCount": 1
+}
+```
+
 ## 🏗️ Advanced Usage
+
+### Batch Scraping with Configuration
+
+```typescript
+import { scrapePaniniProducts } from 'panini-scraper';
+
+const config = {
+  timeout: 15000,
+  headers: {
+    'User-Agent': 'MyApp/1.0'
+  }
+};
+
+const urls = [
+  'https://panini.com.br/wolverine-2025-05',
+  'https://panini.com.br/spider-man',
+  'https://panini.com.br/batman'
+];
+
+const result = await scrapePaniniProducts(urls, config);
+
+// Process results based on success/failure
+if (result.successCount > 0) {
+  console.log(`✅ Successfully scraped ${result.successCount} products`);
+  
+  result.successes.forEach(({ product }) => {
+    console.log(`- ${product.title}: R$ ${product.currentPrice}`);
+  });
+}
+
+if (result.failureCount > 0) {
+  console.log(`\n❌ Failed to scrape ${result.failureCount} products`);
+  
+  result.failures.forEach(({ url, message, error }) => {
+    console.log(`- ${url}`);
+    console.log(`  Reason: ${message}`);
+    console.log(`  Error type: ${error.name}`);
+  });
+}
+```
 
 ### Using Clean Architecture Components
 
@@ -163,10 +291,19 @@ const config: HttpConfig = {
 const scraperService = new PaniniScraperService(config);
 const useCase = new ScrapeProductUseCase(scraperService);
 
+// Single product scraping
 const product = await useCase.execute('https://panini.com.br/spider-man');
+
+// Batch scraping
+const result = await useCase.executeMany([
+  'https://panini.com.br/wolverine',
+  'https://panini.com.br/x-men'
+]);
 ```
 
 ### Error Handling
+
+#### Single Product Error Handling
 
 The library provides specific error types for different scenarios:
 
@@ -194,6 +331,35 @@ try {
     console.error('Status code:', error.statusCode);
   }
 }
+```
+
+#### Batch Scraping Error Handling
+
+Batch scraping never throws errors. Instead, it returns a result with successes and failures:
+
+```typescript
+import { scrapePaniniProducts, InvalidUrlError, ProductNotFoundError } from 'panini-scraper';
+
+const result = await scrapePaniniProducts([
+  'https://panini.com.br/valid-product',
+  'https://panini.com.br/invalid-product',
+  'not-a-valid-url'
+]);
+
+// Batch scraping automatically categorizes errors
+result.failures.forEach(({ url, error, message }) => {
+  if (error instanceof InvalidUrlError) {
+    console.error(`Invalid URL format: ${url}`);
+  } else if (error instanceof ProductNotFoundError) {
+    console.error(`Product not found: ${url}`);
+  } else {
+    console.error(`Scraping failed for ${url}: ${message}`);
+  }
+});
+
+// You can also check the overall success rate
+const successRate = (result.successCount / result.totalProcessed) * 100;
+console.log(`Success rate: ${successRate.toFixed(2)}%`);
 ```
 
 ### Working with Product Entity
@@ -280,9 +446,16 @@ The library maintains high test coverage standards:
 ## 📈 Performance
 
 - **Average Response Time**: 1-3 seconds per product
-- **Concurrent Requests**: Supports parallel scraping with Promise.all
-- **Memory Usage**: ~50MB for typical usage
+- **Batch Processing**: Sequential processing (prevents overwhelming the server)
+- **Concurrent Requests**: Supports parallel scraping with Promise.all for advanced use cases
+- **Memory Usage**: ~50MB for typical usage, scales with batch size
 - **Rate Limiting**: Implement your own rate limiting as needed
+
+### Performance Tips
+
+- **Batch Scraping**: Use `scrapePaniniProducts` for multiple URLs - it processes sequentially and handles errors gracefully
+- **Parallel Scraping**: For maximum speed (at your own risk), use `Promise.all` with `createPaniniScraper`
+- **Error Recovery**: Batch scraping returns partial results, so you don't lose successful scrapes if some URLs fail
 
 ## 🏛️ Architecture
 
@@ -371,6 +544,34 @@ Scrapes a single product from Panini Brasil.
 
 ---
 
+#### `scrapePaniniProducts(urls, config?)` ✨ **NEW**
+
+Scrapes multiple products in a single call with automatic error handling.
+
+**Parameters:**
+- `urls` (string[]): Array of product URLs
+- `config` (HttpConfig, optional): HTTP configuration
+
+**Returns:** `Promise<BatchScrapeResult>`
+
+**Features:**
+- **Sequential Processing**: URLs are processed one by one to avoid overwhelming the server
+- **Partial Results**: Returns both successful and failed scrapes
+- **Never Throws**: All errors are captured and returned in the `failures` array
+- **Detailed Errors**: Each failure includes the URL, error object, and message
+
+**Example:**
+```typescript
+const result = await scrapePaniniProducts([
+  'https://panini.com.br/product-1',
+  'https://panini.com.br/product-2'
+]);
+
+console.log(`Success: ${result.successCount}, Failed: ${result.failureCount}`);
+```
+
+---
+
 #### `createPaniniScraper(config?)`
 
 Creates a reusable scraper function.
@@ -384,11 +585,16 @@ Creates a reusable scraper function.
 
 #### `ScrapeProductUseCase`
 
-Use case for scraping products.
+Use case for scraping products with support for both single and batch operations.
 
 ```typescript
 const useCase = new ScrapeProductUseCase(repository);
+
+// Single product
 const product = await useCase.execute(url);
+
+// Batch products
+const result = await useCase.executeMany([url1, url2, url3]);
 ```
 
 #### `PaniniScraperService`
