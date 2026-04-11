@@ -66,7 +66,10 @@ const config: Config = {
     clearMocks: true,
 
     // Restore mocks after each test
-    restoreMocks: true
+    restoreMocks: true,
+
+    // Limit workers to avoid resource exhaustion
+    maxWorkers: 1
 };
 
 export default config;

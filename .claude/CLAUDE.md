@@ -53,3 +53,8 @@ npm run lint          # ESLint
 - TypeScript strict, Clean Architecture, SOLID
 - Testes unitarios + integracao
 - 95%+ cobertura
+
+## Indice
+
+- [Agentes](agents/INDEX.md) — scraper-developer
+- [Skills](skills/INDEX.md) — add-scraper, run-tests
