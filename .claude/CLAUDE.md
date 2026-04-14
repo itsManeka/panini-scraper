@@ -56,5 +56,6 @@ npm run lint          # ESLint
 
 ## Indice
 
-- [Agentes](agents/INDEX.md) — scraper-developer
 - [Skills](skills/INDEX.md) — add-scraper, run-tests
+
+Agente `scraper-developer` e global do workspace.
