@@ -379,7 +379,7 @@ export class PaniniScraperService implements ProductRepository {
 
 		// Look for any images with CloudFront or external CDN URLs in the entire page
 		let foundExternalImage = '';
-		$('img').each((_, element) => {
+		$('img').each((_index, element) => {
 			const img = $(element);
 			const srcAttributes = [
 				img.attr('src'),
@@ -470,7 +470,7 @@ export class PaniniScraperService implements ProductRepository {
 
 		// Last resort: try to find ANY non-placeholder image, even if it's local
 		let fallbackImage = '';
-		$('img').each((_, element) => {
+		$('img').each((_index, element) => {
 			const img = $(element);
 			const srcAttributes = [
 				img.attr('src'),
@@ -514,7 +514,7 @@ export class PaniniScraperService implements ProductRepository {
 		const scripts = $('script');
 		let foundImageReference = '';
 
-		scripts.each((_, element) => {
+		scripts.each((_index, element) => {
 			const scriptContent = $(element).html() || '';
 
 			// Look for JSON data with image URLs
@@ -540,12 +540,12 @@ export class PaniniScraperService implements ProductRepository {
 									}
 								}
 							}
-						} catch (e) {
+						} catch {
 							// Ignore JSON parsing errors
 						}
 					}
 				}
-			} catch (e) {
+			} catch {
 				// Ignore errors
 			}
 
